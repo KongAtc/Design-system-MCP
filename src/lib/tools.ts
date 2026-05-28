@@ -75,6 +75,29 @@ export class DesignSystemTools {
     };
   }
 
+  async getProvenanceTemplate(options: {
+    designSystem?: string;
+    ref?: string;
+    notes?: string;
+  } = {}) {
+    const resolvedRef = await this.git.resolveRef(options.ref);
+    const designSystem = options.designSystem || "stack-design-system";
+
+    return {
+      ref: stamp(resolvedRef),
+      fileName: "design-system.provenance.json",
+      provenance: {
+        designSystem,
+        builtAgainst: resolvedRef.sha,
+        builtAgainstCommitDate: resolvedRef.commitDate,
+        generatedAt: new Date().toISOString(),
+        notes:
+          options.notes ||
+          `Built using ${designSystem} via design-system-mcp. Validate with validate_usage before shipping.`
+      }
+    };
+  }
+
   async listChanges(sinceRef: string) {
     const from = await this.git.resolveRef(sinceRef);
     const to = await this.git.resolveRef("latest");

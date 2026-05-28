@@ -9,6 +9,7 @@ The adapter reads React/TSX components, generated prop contracts, component meta
 - Node.js 22+
 - npm
 - Codex CLI/Desktop with MCP support
+- Git available on `PATH`
 - A design-template repo that contains:
   - `tokens.json`
   - `src/components/**/Component.tsx`
@@ -19,27 +20,38 @@ The adapter reads React/TSX components, generated prop contracts, component meta
 
 ### Option A: Use The Published Package
 
-After this package is published to npm, users only need this MCP package name and a local checkout of the design-template repo.
-
-Clone and verify the design-template repo:
-
-```sh
-git clone <YOUR_TEMPLATE_REPO_URL> stack-design-template
-cd stack-design-template
-npm install
-npm run check:contracts
-npm run build
-```
+After this package is published to npm, users only need this MCP package name and the design-template repo URL. The MCP server will clone the template into a local cache automatically.
 
 Add the MCP server to Codex using `npx`:
 
 ```sh
-DESIGN_SYSTEM_REPO="$(pwd)"
-
 codex mcp add stack-design-system \
-  --env DESIGN_SYSTEM_REPO="$DESIGN_SYSTEM_REPO" \
+  --env DESIGN_SYSTEM_REPO_URL="<YOUR_TEMPLATE_REPO_URL>" \
   -- npx -y <YOUR_NPM_PACKAGE_NAME>
 ```
+
+When the MCP server starts, it clones the template repo into:
+
+```txt
+~/.cache/design-system-mcp/
+```
+
+Override the cache path when needed:
+
+```sh
+codex mcp add stack-design-system \
+  --env DESIGN_SYSTEM_REPO_URL="<YOUR_TEMPLATE_REPO_URL>" \
+  --env DESIGN_SYSTEM_REPO_CACHE="/absolute/path/to/cache/stack-design-template" \
+  -- npx -y <YOUR_NPM_PACKAGE_NAME>
+```
+
+By default, `latest` resolves to the remote repository's default branch via `origin/HEAD`. Set `DESIGN_SYSTEM_REPO_REF` only when you want a specific branch, tag, or SHA:
+
+```sh
+--env DESIGN_SYSTEM_REPO_REF="main"
+```
+
+For private repos, use an SSH URL or a Git credential helper that works in the user's shell before registering the MCP server.
 
 If you publish this package under its current name, replace `<YOUR_NPM_PACKAGE_NAME>` with:
 
@@ -47,7 +59,35 @@ If you publish this package under its current name, replace `<YOUR_NPM_PACKAGE_N
 design-system-mcp
 ```
 
-### Option B: Use A Local MCP Checkout
+### Option B: Use A Local Template Checkout
+
+Use this if you want to inspect or edit the template locally.
+
+```sh
+mkdir stack-design-system
+cd stack-design-system
+
+git clone <YOUR_TEMPLATE_REPO_URL> stack-design-template
+```
+
+Verify the design-template repo:
+
+```sh
+cd stack-design-template
+npm install
+npm run check:contracts
+npm run build
+```
+
+Add the published MCP server to Codex with the local template path:
+
+```sh
+codex mcp add stack-design-system \
+  --env DESIGN_SYSTEM_REPO="$(pwd)" \
+  -- npx -y <YOUR_NPM_PACKAGE_NAME>
+```
+
+### Option C: Develop This MCP Locally
 
 Clone this MCP repo and your design-template repo side by side:
 
@@ -67,20 +107,9 @@ npm install
 npm run build
 ```
 
-Verify the design-template repo:
+Register the local build with Codex:
 
 ```sh
-cd ../stack-design-template
-npm install
-npm run check:contracts
-npm run build
-```
-
-Add the MCP server to Codex:
-
-```sh
-cd ../design-system-mcp
-
 DESIGN_SYSTEM_REPO="$(cd ../stack-design-template && pwd)"
 MCP_SERVER="$(pwd)/dist/src/index.js"
 
@@ -119,10 +148,21 @@ command = "npx"
 args = ["-y", "<YOUR_NPM_PACKAGE_NAME>"]
 
 [mcp_servers.stack-design-system.env]
+DESIGN_SYSTEM_REPO_URL = "https://github.com/your-org/stack-design-template.git"
+```
+
+For a local template checkout:
+
+```toml
+[mcp_servers.stack-design-system]
+command = "npx"
+args = ["-y", "<YOUR_NPM_PACKAGE_NAME>"]
+
+[mcp_servers.stack-design-system.env]
 DESIGN_SYSTEM_REPO = "/absolute/path/to/stack-design-template"
 ```
 
-For local development without npm publishing:
+For local MCP development without npm publishing:
 
 ```toml
 [mcp_servers.stack-design-system]
@@ -137,19 +177,39 @@ Restart Codex after editing the config.
 
 ## Configuration
 
-By default, running from this folder reads `../design-template`. Override with:
+The server supports three repo source modes:
+
+- `DESIGN_SYSTEM_REPO_URL`: Git URL to auto-clone and fetch into a local cache.
+- `DESIGN_SYSTEM_REPO`: local template repo path.
+- default: `../design-template` relative to the MCP process.
+
+Remote URL mode:
+
+```sh
+DESIGN_SYSTEM_REPO_URL=https://github.com/your-org/stack-design-template.git \
+npm start
+```
+
+Local checkout mode:
 
 ```sh
 DESIGN_SYSTEM_REPO=/path/to/design-template npm start
 ```
 
-Use an absolute `DESIGN_SYSTEM_REPO` path in shared setup docs so users can place the template repo anywhere.
+Optional cache override:
+
+```sh
+DESIGN_SYSTEM_REPO_CACHE=/path/to/cache npm start
+```
+
+Use absolute paths in shared setup docs so users can place repos and caches anywhere.
 
 ## Tools
 
 - `search_components(intent, ref?)`
 - `get_component(name, ref?)`
 - `get_design_tokens(ref?)`
+- `get_provenance_template(designSystem?, ref?, notes?)`
 - `list_changes(since_ref)`
 - `validate_usage(code, built_against)`
 
@@ -197,10 +257,18 @@ npx -y <YOUR_NPM_PACKAGE_NAME>
 
 When an agent builds a website with this MCP server, ask it to:
 
-1. Call `get_design_tokens` or `get_component`.
+1. Call `get_design_tokens`, `get_component`, or `get_provenance_template`.
 2. Record the returned design-template SHA in `design-system.provenance.json`.
 3. Generate the website using the returned components/tokens.
 4. Call `validate_usage(code, built_against)` with that SHA.
+
+Recommended prompt:
+
+```txt
+Use stack-design-system to call get_provenance_template.
+Create design-system.provenance.json from the returned payload.
+After implementation, run validate_usage with provenance.builtAgainst.
+```
 
 Example provenance file:
 

@@ -1,22 +1,20 @@
 #!/usr/bin/env node
 
-import { resolve } from "node:path";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import * as z from "zod/v4";
 import { GitRepository } from "./lib/git.js";
+import { resolveDesignSystemRepositorySource } from "./lib/repo-source.js";
 import { DesignSystemTools } from "./lib/tools.js";
+
+const repositorySource = await resolveDesignSystemRepositorySource();
 
 const server = new McpServer({
   name: "design-system-mcp",
   version: "0.1.0"
 });
 
-const designSystemRepo = process.env.DESIGN_SYSTEM_REPO
-  ? resolve(process.env.DESIGN_SYSTEM_REPO)
-  : resolve(process.cwd(), "../design-template");
-
-const git = new GitRepository(designSystemRepo);
+const git = new GitRepository(repositorySource.repoPath, repositorySource.gitOptions);
 const tools = new DesignSystemTools(git);
 
 server.registerTool(
@@ -58,6 +56,21 @@ server.registerTool(
 );
 
 server.registerTool(
+  "get_provenance_template",
+  {
+    title: "Get Provenance Template",
+    description: "Return a design-system.provenance.json payload stamped with the resolved design-template commit.",
+    inputSchema: z.object({
+      designSystem: z.string().optional(),
+      ref: z.string().optional(),
+      notes: z.string().optional()
+    })
+  },
+  async ({ designSystem, ref, notes }) =>
+    jsonResponse(await tools.getProvenanceTemplate({ designSystem, ref, notes }))
+);
+
+server.registerTool(
   "list_changes",
   {
     title: "List Changes",
@@ -96,7 +109,9 @@ function jsonResponse(value: unknown) {
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error(`Design System MCP server running on stdio. Repo: ${designSystemRepo}`);
+  console.error(
+    `Design System MCP server running on stdio. Repo: ${repositorySource.repoPath} (${repositorySource.description})`
+  );
 }
 
 main().catch((error) => {

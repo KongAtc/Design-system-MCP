@@ -9,12 +9,24 @@ export type ResolvedRef = {
   commitDate: string;
 };
 
+export type GitRepositoryOptions = {
+  latestRef?: string;
+  fetchOnLatest?: boolean;
+};
+
 export class GitRepository {
-  constructor(private readonly cwd: string) {}
+  constructor(
+    private readonly cwd: string,
+    private readonly options: GitRepositoryOptions = {}
+  ) {}
 
   async resolveRef(ref?: string): Promise<ResolvedRef> {
     const requestedRef = ref?.trim() || "latest";
-    const gitRef = requestedRef === "latest" ? "HEAD" : requestedRef;
+    if (requestedRef === "latest" && this.options.fetchOnLatest) {
+      await this.fetch();
+    }
+
+    const gitRef = requestedRef === "latest" ? (this.options.latestRef ?? "HEAD") : requestedRef;
     const sha = await this.git(["rev-parse", `${gitRef}^{commit}`]);
     const commitDate = await this.git(["show", "-s", "--format=%cI", sha]);
 
@@ -48,6 +60,10 @@ export class GitRepository {
     ]);
 
     return output.split("\n").filter(Boolean);
+  }
+
+  async fetch(): Promise<void> {
+    await this.git(["fetch", "--prune", "origin"]);
   }
 
   private async git(args: string[], trim = true): Promise<string> {
