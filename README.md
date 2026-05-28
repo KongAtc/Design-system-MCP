@@ -17,6 +17,38 @@ The adapter reads React/TSX components, generated prop contracts, component meta
 
 ## Quickstart
 
+### Option A: Use The Published Package
+
+After this package is published to npm, users only need this MCP package name and a local checkout of the design-template repo.
+
+Clone and verify the design-template repo:
+
+```sh
+git clone <YOUR_TEMPLATE_REPO_URL> stack-design-template
+cd stack-design-template
+npm install
+npm run check:contracts
+npm run build
+```
+
+Add the MCP server to Codex using `npx`:
+
+```sh
+DESIGN_SYSTEM_REPO="$(pwd)"
+
+codex mcp add stack-design-system \
+  --env DESIGN_SYSTEM_REPO="$DESIGN_SYSTEM_REPO" \
+  -- npx -y <YOUR_NPM_PACKAGE_NAME>
+```
+
+If you publish this package under its current name, replace `<YOUR_NPM_PACKAGE_NAME>` with:
+
+```txt
+design-system-mcp
+```
+
+### Option B: Use A Local MCP Checkout
+
 Clone this MCP repo and your design-template repo side by side:
 
 ```sh
@@ -83,6 +115,17 @@ You can also edit `~/.codex/config.toml` directly:
 
 ```toml
 [mcp_servers.stack-design-system]
+command = "npx"
+args = ["-y", "<YOUR_NPM_PACKAGE_NAME>"]
+
+[mcp_servers.stack-design-system.env]
+DESIGN_SYSTEM_REPO = "/absolute/path/to/stack-design-template"
+```
+
+For local development without npm publishing:
+
+```toml
+[mcp_servers.stack-design-system]
 command = "node"
 args = ["/absolute/path/to/design-system-mcp/dist/src/index.js"]
 
@@ -116,6 +159,38 @@ Use an absolute `DESIGN_SYSTEM_REPO` path in shared setup docs so users can plac
 npm install
 npm run build
 npm start
+```
+
+## Packaging
+
+Before publishing, choose the final package name in `package.json`. The current placeholder name is:
+
+```txt
+design-system-mcp
+```
+
+Check what will be published:
+
+```sh
+npm run pack:dry-run
+```
+
+Publish to npm:
+
+```sh
+npm publish
+```
+
+For a scoped public package, use:
+
+```sh
+npm publish --access public
+```
+
+After publish, users can run the MCP server with:
+
+```sh
+npx -y <YOUR_NPM_PACKAGE_NAME>
 ```
 
 ## Provenance Workflow

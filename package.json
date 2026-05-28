@@ -1,16 +1,33 @@
 {
   "name": "design-system-mcp",
   "version": "0.1.0",
-  "private": true,
   "type": "module",
   "description": "Git-backed MCP server for React/TSX design system knowledge and drift detection.",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=22"
+  },
   "bin": {
     "design-system-mcp": "./dist/src/index.js"
   },
+  "files": [
+    "dist/",
+    "README.md",
+    "package.json"
+  ],
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "design-system",
+    "react",
+    "tsx"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "dev": "npm run build && node dist/src/index.js",
-    "start": "node dist/src/index.js"
+    "start": "node dist/src/index.js",
+    "prepack": "npm run build",
+    "pack:dry-run": "npm pack --dry-run"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
