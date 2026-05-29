@@ -1,9 +1,9 @@
 {
-  "name": "design-system-mcp",
+  "name": "@kongatc/design-system-mcp",
   "version": "0.1.0",
   "type": "module",
   "description": "Git-backed MCP server for React/TSX design system knowledge and drift detection.",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "engines": {
     "node": ">=22"
   },

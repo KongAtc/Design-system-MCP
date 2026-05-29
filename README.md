@@ -26,7 +26,7 @@ Add the MCP server to Codex using `npx`:
 
 ```sh
 codex mcp add stack-design-system \
-  -- npx -y <YOUR_NPM_PACKAGE_NAME>
+  -- npx -y @kongatc/design-system-mcp
 ```
 
 When the MCP server starts, it clones the template repo into:
@@ -40,7 +40,7 @@ Override the cache path when needed:
 ```sh
 codex mcp add stack-design-system \
   --env DESIGN_SYSTEM_REPO_CACHE="/absolute/path/to/cache/stack-design-template" \
-  -- npx -y <YOUR_NPM_PACKAGE_NAME>
+  -- npx -y @kongatc/design-system-mcp
 ```
 
 By default, `latest` resolves to the remote repository's default branch via `origin/HEAD`. Set `DESIGN_SYSTEM_REPO_REF` only when you want a specific branch, tag, or SHA:
@@ -56,13 +56,7 @@ Override the official template repo when needed:
 ```sh
 codex mcp add stack-design-system \
   --env DESIGN_SYSTEM_REPO_URL="<ANOTHER_TEMPLATE_REPO_URL>" \
-  -- npx -y <YOUR_NPM_PACKAGE_NAME>
-```
-
-If you publish this package under its current name, replace `<YOUR_NPM_PACKAGE_NAME>` with:
-
-```txt
-design-system-mcp
+  -- npx -y @kongatc/design-system-mcp
 ```
 
 ### Option B: Use A Local Template Checkout
@@ -90,7 +84,7 @@ Add the published MCP server to Codex with the local template path:
 ```sh
 codex mcp add stack-design-system \
   --env DESIGN_SYSTEM_REPO="$(pwd)" \
-  -- npx -y <YOUR_NPM_PACKAGE_NAME>
+  -- npx -y @kongatc/design-system-mcp
 ```
 
 ### Option C: Develop This MCP Locally
@@ -151,7 +145,7 @@ You can also edit `~/.codex/config.toml` directly:
 ```toml
 [mcp_servers.stack-design-system]
 command = "npx"
-args = ["-y", "<YOUR_NPM_PACKAGE_NAME>"]
+args = ["-y", "@kongatc/design-system-mcp"]
 ```
 
 To override the official template repo:
@@ -159,7 +153,7 @@ To override the official template repo:
 ```toml
 [mcp_servers.stack-design-system]
 command = "npx"
-args = ["-y", "<YOUR_NPM_PACKAGE_NAME>"]
+args = ["-y", "@kongatc/design-system-mcp"]
 
 [mcp_servers.stack-design-system.env]
 DESIGN_SYSTEM_REPO_URL = "https://github.com/your-org/stack-design-template.git"
@@ -170,7 +164,7 @@ For a local template checkout:
 ```toml
 [mcp_servers.stack-design-system]
 command = "npx"
-args = ["-y", "<YOUR_NPM_PACKAGE_NAME>"]
+args = ["-y", "@kongatc/design-system-mcp"]
 
 [mcp_servers.stack-design-system.env]
 DESIGN_SYSTEM_REPO = "/absolute/path/to/stack-design-template"
@@ -242,10 +236,10 @@ npm start
 
 ## Packaging
 
-Before publishing, choose the final package name in `package.json`. The current placeholder name is:
+The npm package name is:
 
 ```txt
-design-system-mcp
+@kongatc/design-system-mcp
 ```
 
 Check what will be published:
@@ -269,7 +263,7 @@ npm publish --access public
 After publish, users can run the MCP server with:
 
 ```sh
-npx -y <YOUR_NPM_PACKAGE_NAME>
+npx -y @kongatc/design-system-mcp
 ```
 
 ## Provenance Workflow
