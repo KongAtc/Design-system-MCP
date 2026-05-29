@@ -7,6 +7,7 @@ import { promisify } from "node:util";
 import type { GitRepositoryOptions } from "./git.js";
 
 const execFileAsync = promisify(execFile);
+const DEFAULT_DESIGN_SYSTEM_REPO_URL = "https://github.com/KongAtc/Design-Template.git";
 
 export type DesignSystemRepositorySource = {
   repoPath: string;
@@ -29,29 +30,20 @@ export async function resolveDesignSystemRepositorySource(
     };
   }
 
-  if (env.DESIGN_SYSTEM_REPO_URL) {
-    const repoUrl = env.DESIGN_SYSTEM_REPO_URL;
-    const branchOrRef = env.DESIGN_SYSTEM_REPO_REF || "origin/HEAD";
-    const repoPath = resolveCachePath(repoUrl, env.DESIGN_SYSTEM_REPO_CACHE);
-    await ensureCachedRepository(repoUrl, repoPath);
-
-    return {
-      repoPath,
-      gitOptions: {
-        latestRef: normalizeRemoteLatestRef(branchOrRef),
-        fetchOnLatest: true
-      },
-      description: `cached DESIGN_SYSTEM_REPO_URL at ${repoPath}`
-    };
-  }
+  const repoUrl = env.DESIGN_SYSTEM_REPO_URL || DEFAULT_DESIGN_SYSTEM_REPO_URL;
+  const branchOrRef = env.DESIGN_SYSTEM_REPO_REF || "origin/HEAD";
+  const repoPath = resolveCachePath(repoUrl, env.DESIGN_SYSTEM_REPO_CACHE);
+  await ensureCachedRepository(repoUrl, repoPath);
 
   return {
-    repoPath: resolve(cwd, "../design-template"),
+    repoPath,
     gitOptions: {
-      latestRef: "HEAD",
-      fetchOnLatest: false
+      latestRef: normalizeRemoteLatestRef(branchOrRef),
+      fetchOnLatest: true
     },
-    description: "default ../design-template"
+    description: env.DESIGN_SYSTEM_REPO_URL
+      ? `cached DESIGN_SYSTEM_REPO_URL at ${repoPath}`
+      : `cached default template repo at ${repoPath}`
   };
 }
 

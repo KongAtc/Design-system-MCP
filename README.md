@@ -20,13 +20,12 @@ The adapter reads React/TSX components, generated prop contracts, component meta
 
 ### Option A: Use The Published Package
 
-After this package is published to npm, users only need this MCP package name and the design-template repo URL. The MCP server will clone the template into a local cache automatically.
+After this package is published to npm, users only need this MCP package name. The MCP server uses the official Stack design-template repo by default and clones it into a local cache automatically.
 
 Add the MCP server to Codex using `npx`:
 
 ```sh
 codex mcp add stack-design-system \
-  --env DESIGN_SYSTEM_REPO_URL="<YOUR_TEMPLATE_REPO_URL>" \
   -- npx -y <YOUR_NPM_PACKAGE_NAME>
 ```
 
@@ -40,7 +39,6 @@ Override the cache path when needed:
 
 ```sh
 codex mcp add stack-design-system \
-  --env DESIGN_SYSTEM_REPO_URL="<YOUR_TEMPLATE_REPO_URL>" \
   --env DESIGN_SYSTEM_REPO_CACHE="/absolute/path/to/cache/stack-design-template" \
   -- npx -y <YOUR_NPM_PACKAGE_NAME>
 ```
@@ -52,6 +50,14 @@ By default, `latest` resolves to the remote repository's default branch via `ori
 ```
 
 For private repos, use an SSH URL or a Git credential helper that works in the user's shell before registering the MCP server.
+
+Override the official template repo when needed:
+
+```sh
+codex mcp add stack-design-system \
+  --env DESIGN_SYSTEM_REPO_URL="<ANOTHER_TEMPLATE_REPO_URL>" \
+  -- npx -y <YOUR_NPM_PACKAGE_NAME>
+```
 
 If you publish this package under its current name, replace `<YOUR_NPM_PACKAGE_NAME>` with:
 
@@ -146,6 +152,14 @@ You can also edit `~/.codex/config.toml` directly:
 [mcp_servers.stack-design-system]
 command = "npx"
 args = ["-y", "<YOUR_NPM_PACKAGE_NAME>"]
+```
+
+To override the official template repo:
+
+```toml
+[mcp_servers.stack-design-system]
+command = "npx"
+args = ["-y", "<YOUR_NPM_PACKAGE_NAME>"]
 
 [mcp_servers.stack-design-system.env]
 DESIGN_SYSTEM_REPO_URL = "https://github.com/your-org/stack-design-template.git"
@@ -179,15 +193,20 @@ Restart Codex after editing the config.
 
 The server supports three repo source modes:
 
-- `DESIGN_SYSTEM_REPO_URL`: Git URL to auto-clone and fetch into a local cache.
+- default: official Stack template repo at `https://github.com/KongAtc/Design-Template.git`.
+- `DESIGN_SYSTEM_REPO_URL`: override Git URL to auto-clone and fetch into a local cache.
 - `DESIGN_SYSTEM_REPO`: local template repo path.
-- default: `../design-template` relative to the MCP process.
 
-Remote URL mode:
+Default mode:
 
 ```sh
-DESIGN_SYSTEM_REPO_URL=https://github.com/your-org/stack-design-template.git \
 npm start
+```
+
+Custom remote URL mode:
+
+```sh
+DESIGN_SYSTEM_REPO_URL=https://github.com/your-org/stack-design-template.git npm start
 ```
 
 Local checkout mode:
